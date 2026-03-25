@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 # -*- mode: python; coding: utf-8 -*-
 #
 # Copyright (C) 2026 Benjamin Thomas Schwertfeger
@@ -30,7 +31,6 @@ import urllib.request
 import urllib.parse
 import json
 
-# -- Config -----------------------------------------------------------
 API_KEY = os.getenv("DEEPL_API_KEY", "")
 NOTIFY_TIMEOUT = 3000  # ms
 
