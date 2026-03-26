@@ -1,26 +1,34 @@
-# Copylator
+# Copylator - Quick translation via shortcuts
 
-Translate highlighted text via DeepL API to bind with a keyboard shortcut.
+![Static Badge](https://img.shields.io/badge/License-MIT-orange?style=plastic&logo=blue&logoColor=blue&color=orange)
 
-**Note:** X11 only (Linux with xclip support).
+Translate highlighted text via DeepL API via keyboard shortcuts.
+
+**Note:** Only tested on Ubuntu 24.04 + X11 (Linux with xclip support).
+
+![Copylator demo](media/demo.gif)
 
 ## Setup
 
 1. Install dependencies:
+
    ```bash
    sudo apt install xclip libnotify-bin
    ```
 
 2. Make executable:
+
    ```bash
    chmod +x translate_selection.py
    ```
 
 3. Set your DeepL API key in your shell environment:
+
    ```zsh
    # e.g. ~/.zshrc
    export DEEPL_API_KEY="your-key-here"
    ```
+
    The API key must be available in the environment where the script runs.
 
 4. Example setup: Add keyboard shortcuts in Ubuntu 24.04 Settings:

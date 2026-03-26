@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- mode: python; coding: utf-8 -*-
 #
 # Copyright (C) 2026 Benjamin Thomas Schwertfeger
 # https://github.com/btschwertfeger
@@ -24,13 +23,34 @@ Config:
     Pro key uses api.deepl.com
 """
 
+import argparse
+import json
+import os
 import subprocess
 import sys
-import os
-import argparse
-import urllib.request
 import urllib.parse
-import json
+import urllib.request
+
+
+class DeepLError(Exception):
+    """Base exception for DeepL API errors."""
+
+
+class InvalidAPIKeyError(DeepLError):
+    """Raised when the DeepL API key is invalid."""
+
+
+class QuotaExceededError(DeepLError):
+    """Raised when the DeepL API quota is exceeded."""
+
+
+class DeepLAPIError(DeepLError):
+    """Raised for other DeepL API HTTP errors."""
+
+
+class NetworkError(DeepLError):
+    """Raised when unable to reach the DeepL API."""
+
 
 API_KEY = os.getenv("DEEPL_API_KEY", "")
 NOTIFY_TIMEOUT = 3000  # ms
@@ -75,8 +95,7 @@ def get_selection() -> str:
 def set_clipboard(text: str) -> None:
     """Write text to the CLIPBOARD selection (Ctrl+V buffer)."""
     with subprocess.Popen(
-        ["xclip", "-selection", "clipboard"],
-        stdin=subprocess.PIPE
+        ["xclip", "-selection", "clipboard"], stdin=subprocess.PIPE
     ) as proc:
         proc.communicate(text.encode("utf-8"))
 
@@ -94,7 +113,10 @@ def translate_text(text: str, source_lang: str, target_lang: str, api_key: str) 
         The translated text.
 
     Raises:
-        Exception: If the API request fails or the API key is invalid.
+        InvalidAPIKeyError: If the API key is invalid (HTTP 403).
+        QuotaExceededError: If the API quota is exceeded (HTTP 456).
+        DeepLAPIError: For other HTTP errors.
+        NetworkError: If unable to reach the DeepL API.
     """
     # Detect API endpoint based on key
     base_url = (
@@ -118,12 +140,12 @@ def translate_text(text: str, source_lang: str, target_lang: str, api_key: str) 
             return result["translations"][0]["text"]
     except urllib.error.HTTPError as e:
         if e.code == 403:
-            raise Exception("Invalid API key") from e
+            raise InvalidAPIKeyError("Invalid API key") from e
         if e.code == 456:
-            raise Exception("Quota exceeded") from e
-        raise Exception(f"HTTP error {e.code}: {e.reason}") from e
+            raise QuotaExceededError("Quota exceeded") from e
+        raise DeepLAPIError(f"HTTP error {e.code}: {e.reason}") from e
     except urllib.error.URLError as e:
-        raise Exception("Cannot reach DeepL - check your internet") from e
+        raise NetworkError("Cannot reach DeepL - check your internet") from e
 
 
 def main() -> None:
@@ -153,7 +175,7 @@ def main() -> None:
 
     try:
         translated = translate_text(text, args.src, args.tgt, API_KEY)
-    except Exception as e:
+    except DeepLError as e:
         notify("Translator [ERROR]", str(e), urgency="critical")
         sys.exit(1)
 
