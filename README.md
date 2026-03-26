@@ -1,48 +1,41 @@
 # Copylator
 
-Simple clipboard translator using DeepL API with no third-party Python
-dependencies.
+Translate highlighted text via DeepL API to bind with a keyboard shortcut.
 
-## Features
-
-- **Ctrl+[** : Translate German to English
-- **Ctrl+]** : Translate English to German
-- Desktop notifications with translation preview + copy to clipboard
+**Note:** X11 only (Linux with xclip support).
 
 ## Setup
 
-1. Install system dependencies:
+1. Install dependencies:
+   ```bash
+   sudo apt install xclip libnotify-bin
+   ```
 
-```bash
-sudo apt install xclip libnotify-bin
-```
+2. Make executable:
+   ```bash
+   chmod +x translate_selection.py
+   ```
 
-2. Set your DeepL API key:
+3. Set your DeepL API key in your shell environment:
+   ```zsh
+   # e.g. ~/.zshrc
+   export DEEPL_API_KEY="your-key-here"
+   ```
+   The API key must be available in the environment where the script runs.
 
-```bash
-echo 'export DEEPL_API_KEY="your-key-here"' >> ~/.zshrc
-```
-
-3. Make the script executable:
-
-```bash
-chmod +x translate_selection.py
-```
-
-4. Set up keyboard shortcuts in your desktop environment settings:
-   - **Command for Ctrl+[**: `zsh -c 'source /path/to/.zshrc && /path/to/copylator/translate_selection.py --from DE --to EN'`
-   - **Command for Ctrl+]**: `zsh -c 'source /path/to/.zshrc && /path/to/copylator/translate_selection.py --from EN --to DE'`
-
-   Replace `/path/to/` with the full path to this directory (e.g., `/home/user/.local/bin/translate_selection.py`)
+4. Example setup: Add keyboard shortcuts in Ubuntu 24.04 Settings:
+   - Open **Settings** > **Keyboard** > **View and Customize Shortcuts** > **Custom Shortcuts**
+   - Add new shortcut with command:
+     ```
+     zsh -c 'source /path/to/.zshrc && /path/to/translate_selection.py --from DE --to EN'
+     ```
+     (Replace `/path/to/` with full path actually used)
+   - Assign a keyboard binding (e.g., `Ctrl+[`)
+   - Do the same for other translation direction using another keybinding
 
 ## Usage
 
-1. Highlight or copy any text with your mouse
-2. Press **Ctrl+[** (German -> English) or **Ctrl+]** (English -> German)
-3. Press **Ctrl+V** to paste the translation
-
-## How it works
-
-The script reads your highlighted text (X11 PRIMARY selection), sends it to the
-DeepL API via urllib, and places the translation in your clipboard (CLIPBOARD
-selection) for pasting.
+1. Highlight text anywhere
+2. Press your configured shortcut
+3. Translation appears in clipboard and notification
+4. Press `Ctrl+V` to paste

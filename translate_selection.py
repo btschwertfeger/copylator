@@ -4,6 +4,7 @@
 # Copyright (C) 2026 Benjamin Thomas Schwertfeger
 # https://github.com/btschwertfeger
 #
+# pylint: disable=broad-exception-caught
 
 """
 translate_selection.py
@@ -35,7 +36,14 @@ API_KEY = os.getenv("DEEPL_API_KEY", "")
 NOTIFY_TIMEOUT = 3000  # ms
 
 
-def notify(summary, body="", urgency="normal"):
+def notify(summary: str, body: str = "", urgency: str = "normal") -> None:
+    """Send a desktop notification via notify-send.
+
+    Args:
+        summary: The notification title/summary.
+        body: The notification body text (optional).
+        urgency: The urgency level - "low", "normal", or "critical" (default: "normal").
+    """
     try:
         subprocess.run(
             ["notify-send", "-u", urgency, "-t", str(NOTIFY_TIMEOUT), summary, body],
@@ -45,28 +53,49 @@ def notify(summary, body="", urgency="normal"):
         pass
 
 
-def get_selection():
-    """Return the current PRIMARY selection (highlighted text)."""
+def get_selection() -> str:
+    """Return the current PRIMARY selection (highlighted text).
+
+    Returns:
+        The selected text, or an empty string if no text is selected or xclip fails.
+    """
     try:
         result = subprocess.run(
             ["xclip", "-selection", "primary", "-out"],
             capture_output=True,
             text=True,
             timeout=3,
+            check=True,
         )
         return result.stdout.strip()
     except (subprocess.TimeoutExpired, FileNotFoundError):
         return ""
 
 
-def set_clipboard(text):
+def set_clipboard(text: str) -> None:
     """Write text to the CLIPBOARD selection (Ctrl+V buffer)."""
-    proc = subprocess.Popen(["xclip", "-selection", "clipboard"], stdin=subprocess.PIPE)
-    proc.communicate(text.encode("utf-8"))
+    with subprocess.Popen(
+        ["xclip", "-selection", "clipboard"],
+        stdin=subprocess.PIPE
+    ) as proc:
+        proc.communicate(text.encode("utf-8"))
 
 
-def translate_text(text, source_lang, target_lang, api_key):
-    """Translate text using DeepL API via urllib."""
+def translate_text(text: str, source_lang: str, target_lang: str, api_key: str) -> str:
+    """Translate text using DeepL API via urllib.
+
+    Args:
+        text: The text to translate.
+        source_lang: The source language code (e.g., "DE", "EN").
+        target_lang: The target language code (e.g., "EN-US", "FR").
+        api_key: The DeepL API key.
+
+    Returns:
+        The translated text.
+
+    Raises:
+        Exception: If the API request fails or the API key is invalid.
+    """
     # Detect API endpoint based on key
     base_url = (
         "https://api-free.deepl.com"
@@ -89,15 +118,16 @@ def translate_text(text, source_lang, target_lang, api_key):
             return result["translations"][0]["text"]
     except urllib.error.HTTPError as e:
         if e.code == 403:
-            raise Exception("Invalid API key")
+            raise Exception("Invalid API key") from e
         if e.code == 456:
-            raise Exception("Quota exceeded")
-        raise Exception(f"HTTP error {e.code}: {e.reason}")
-    except urllib.error.URLError:
-        raise Exception("Cannot reach DeepL - check your internet")
+            raise Exception("Quota exceeded") from e
+        raise Exception(f"HTTP error {e.code}: {e.reason}") from e
+    except urllib.error.URLError as e:
+        raise Exception("Cannot reach DeepL - check your internet") from e
 
 
-def main():
+def main() -> None:
+    """Main entry point. Translate selected text via DeepL and copy to clipboard."""
     parser = argparse.ArgumentParser(
         description="Translate selected text to clipboard via DeepL"
     )
