@@ -38,8 +38,8 @@ Translate highlighted text via DeepL API via keyboard shortcuts.
      zsh -c 'source /path/to/.zshrc && /path/to/translate_selection.py --from DE --to EN'
      ```
      (Replace `/path/to/` with full path actually used)
-   - Assign a keyboard binding (e.g., `Ctrl+[`)
-   - Do the same for other translation direction using another keybinding
+   - Assign a keybinding (e.g., `Ctrl+[`)
+   - Do the same for other translations using other keybindings
 
 ## Usage
 
